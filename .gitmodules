@@ -1,0 +1,3 @@
+[submodule "sDDF"]
+	path = sDDF
+	url = https://github.com/au-ts/sDDF
