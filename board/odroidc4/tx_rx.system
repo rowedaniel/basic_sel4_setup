@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<system>
+
+    <!-- shared memory ring buffers -->
+    <memory_region name="uart" size="0x1_000" phys_addr="0xff803000" />
+    <memory_region name="tx_buffer_data" size="0x200_000" page_size="0x200_000" />
+    <memory_region name="tx_free" size="0x200_000" page_size="0x200_000"/>
+    <memory_region name="tx_active" size="0x200_000" page_size="0x200_000"/>
+
+    <protection_domain name="recv" priority="95" budget="20000">
+        <program_image path="rx.elf" />
+        <map mr="tx_buffer_data"    vaddr="0x2_200_000" perms="rw" cached="true" setvar_vaddr="tx_buffer_data" />
+        <map mr="tx_free"           vaddr="0x2_400_000" perms="rw" cached="true" setvar_vaddr="tx_free" />
+        <map mr="tx_active"         vaddr="0x2_600_000" perms="rw" cached="true" setvar_vaddr="tx_active" />
+        <map mr="uart"              vaddr="0x5_000_000" perms="rw" cached="false" setvar_vaddr="uart_base" />
+    </protection_domain>
+
+    <protection_domain name="send" priority="95" budget="20000">
+        <program_image path="tx.elf" />
+        <map mr="tx_buffer_data"    vaddr="0x2_200_000" perms="rw" cached="true" setvar_vaddr="tx_buffer_data" />
+        <map mr="tx_free"           vaddr="0x2_400_000" perms="rw" cached="true" setvar_vaddr="tx_free" />
+        <map mr="tx_active"         vaddr="0x2_600_000" perms="rw" cached="true" setvar_vaddr="tx_active" />
+        <map mr="uart"              vaddr="0x5_000_000" perms="rw" cached="false" setvar_vaddr="uart_base" />
+    </protection_domain>
+    
+    <channel>
+        <end pd="recv" id="2" />
+        <end pd="send" id="2" />
+    </channel>
+
+
+</system>

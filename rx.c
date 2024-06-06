@@ -46,11 +46,13 @@ int receive(void) {
 }
 
 void init(void) {
-  sddf_dprintf("TX init\r\n");
+  microkit_dbg_puts("RX init\r\n");
+  microkit_dbg_puts("Running sddf_dprintf\r\n");
+  sddf_dprintf("RX init\r\n");
 
   // // Init queue's representation for this process
-  net_queue_init(&state.tx_queue, (net_queue_t *)tx_free,
-                 (net_queue_t *)tx_active, 512);
+  // net_queue_init(&state.tx_queue, (net_queue_t *)tx_free,
+  //                (net_queue_t *)tx_active, 512);
 }
 
 void notified(microkit_channel ch)
