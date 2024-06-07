@@ -49,19 +49,16 @@ void transmit(void) {
 }
 
 void init(void) {
-  // Works:
-  microkit_dbg_puts("TX init\r\n");
+  sddf_dprintf("TX init\r\n");
 
-  // sddf_dprintf("TX init\r\n");
+  // Init queue's representation for this process
+  net_queue_init(&state.tx_queue, (net_queue_t *)tx_free,
+                 (net_queue_t *)tx_active, 512);
 
-  // // Init queue's representation for this process
-  // net_queue_init(&state.tx_queue, (net_queue_t *)tx_free,
-  //                (net_queue_t *)tx_active, 512);
+  // Init buffers in shared memory
+  net_buffers_init(&state.tx_queue, 0);
 
-  // // Init buffers in shared memory
-  // net_buffers_init(&state.tx_queue, 0);
-
-  // transmit();
+  transmit();
 }
 
 void notified(microkit_channel ch) {
