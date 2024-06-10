@@ -19,7 +19,7 @@ typedef struct state {
 
 state_t state;
 
-void send(int data) {
+void send(uint64_t data) {
 
   // get a free buffer
   // NOTE: my current understanding is that one should NOT typically do
@@ -41,8 +41,8 @@ void send(int data) {
 }
 
 void transmit(void) {
-  for (int i = 0; i < 10; i++) {
-    sddf_dprintf("TX: Transmitting %d\r\n", i);
+  for (uint64_t i = 0;; i++) {
+    sddf_dprintf("TX: Transmitting %ld\r\n", i);
     microkit_notify(TO_RECV);
     send(i);
   }

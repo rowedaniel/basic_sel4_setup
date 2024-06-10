@@ -34,15 +34,25 @@ int receive(void) {
   assert(!err);
 
   // read data from buffer
-  int data = *(int *)(buffer.io_or_offset + tx_buffer_data);
+  uint64_t data = *(uint64_t *)(buffer.io_or_offset + tx_buffer_data);
   buffer.len = 0;
   
-  sddf_dprintf("RX: Received %d\r\n", data);
+  sddf_dprintf("RX: Received %ld\r\n", data);
 
   // return buffer to free queue
   err = net_enqueue_free(&state.tx_queue, buffer);
   assert(!err);
   return 0;
+}
+
+void receive_all(void) {
+    int num_buffs = net_queue_size(state.tx_queue.active);
+    sddf_dprintf("RX: Receiving %d buffers\r\n", num_buffs);
+    int err;
+    do {
+        err = receive();
+    } while (!err);
+    sddf_dprintf("RX: Waiting for more data\r\n");
 }
 
 void init(void) {
@@ -57,7 +67,7 @@ void notified(microkit_channel ch)
 {
     switch (ch) {
     case FROM_SEND:
-        receive();
+        receive_all();
         break;
     default:
         sddf_dprintf("recv: received notification on unexpected channel: %u\r\n", ch);
