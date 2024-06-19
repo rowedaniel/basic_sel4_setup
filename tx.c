@@ -4,9 +4,9 @@
 
 #include <microkit.h>
 #include <sddf/network/queue.h>
+#include <sddf/timer/client.h>
 #include <sddf/util/printf.h>
 #include <sddf/util/util.h>
-#include <sddf/timer/client.h>
 
 const microkit_channel TO_RECV = 2;
 const microkit_channel TIMER_CH = 1;
@@ -45,7 +45,7 @@ void send(uint64_t data) {
 }
 
 void transmit() {
-  for(int i=0; i<100; ++i) {
+  for (int i = 0; i < 100; ++i) {
     uint64_t now = sddf_timer_time_now(TIMER_CH); // ns
     send(now);
     microkit_notify(TO_RECV);
@@ -67,7 +67,6 @@ void init(void) {
   net_buffers_init(&state.tx_queue, 0);
 
   transmit();
-
 }
 
 void notified(microkit_channel ch) {

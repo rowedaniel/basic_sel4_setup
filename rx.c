@@ -6,7 +6,6 @@
 #include <sddf/util/printf.h>
 #include <sddf/util/util.h>
 
-
 const microkit_channel FROM_SEND = 2;
 
 uintptr_t tx_buffer_data;
@@ -23,7 +22,7 @@ state_t state;
 int receive(void) {
 
   // make sure there is something to receive
-  if(net_queue_empty_active(&state.tx_queue)) {
+  if (net_queue_empty_active(&state.tx_queue)) {
     return -1;
   }
 
@@ -36,7 +35,7 @@ int receive(void) {
   // read data from buffer
   uint64_t data = *(uint64_t *)(buffer.io_or_offset + tx_buffer_data);
   buffer.len = 0;
-  
+
   sddf_dprintf("RX: Received %ld\r\n", data);
 
   // return buffer to free queue
@@ -46,13 +45,13 @@ int receive(void) {
 }
 
 void receive_all(void) {
-    int num_buffs = net_queue_size(state.tx_queue.active);
-    sddf_dprintf("RX: Receiving %d buffers\r\n", num_buffs);
-    int err;
-    do {
-        err = receive();
-    } while (!err);
-    sddf_dprintf("RX: Waiting for more data\r\n");
+  int num_buffs = net_queue_size(state.tx_queue.active);
+  sddf_dprintf("RX: Receiving %d buffers\r\n", num_buffs);
+  int err;
+  do {
+    err = receive();
+  } while (!err);
+  sddf_dprintf("RX: Waiting for more data\r\n");
 }
 
 void init(void) {
@@ -63,14 +62,14 @@ void init(void) {
                  (net_queue_t *)tx_active, 512);
 }
 
-void notified(microkit_channel ch)
-{
-    switch (ch) {
-    case FROM_SEND:
-        receive_all();
-        break;
-    default:
-        sddf_dprintf("recv: received notification on unexpected channel: %u\r\n", ch);
-        break;
-    }
+void notified(microkit_channel ch) {
+  switch (ch) {
+  case FROM_SEND:
+    receive_all();
+    break;
+  default:
+    sddf_dprintf("recv: received notification on unexpected channel: %u\r\n",
+                 ch);
+    break;
+  }
 }
