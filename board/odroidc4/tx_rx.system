@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <system>
 
+    <!-- Odroid-C4 timer physical addresses -->
+    <memory_region name="timer" size="0x10_000" phys_addr="0xffd0f000"/>
+
     <!-- shared memory ring buffers -->
     <memory_region name="uart" size="0x1_000" phys_addr="0xff803000" />
     <memory_region name="tx_buffer_data" size="0x200_000" page_size="0x200_000" />
@@ -22,11 +25,26 @@
         <map mr="tx_active"         vaddr="0x2_600_000" perms="rw" cached="true" setvar_vaddr="tx_active" />
         <map mr="uart"              vaddr="0x5_000_000" perms="rw" cached="false" setvar_vaddr="uart_base" />
     </protection_domain>
+
+    <protection_domain name="timer" priority="200" pp="true">
+        <program_image path="timer.elf"/>
+        <map mr="timer"
+             vaddr="0x2_000_000"
+             perms="rw"
+             cached="false"
+             setvar_vaddr="gpt_regs"/>
+        <irq irq="42" id="0" trigger="edge"/>
+    </protection_domain>
+
     
     <channel>
         <end pd="recv" id="2" />
         <end pd="send" id="2" />
     </channel>
 
+    <channel>
+        <end pd="timer" id="1"/>
+        <end pd="send" id="1"/>
+    </channel>
 
 </system>

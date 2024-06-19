@@ -1,3 +1,4 @@
+#include "sDDF/include/sddf/timer/client.h"
 #include <stdbool.h>
 #include <stdint.h>
 
@@ -5,8 +6,10 @@
 #include <sddf/network/queue.h>
 #include <sddf/util/printf.h>
 #include <sddf/util/util.h>
+#include <sddf/timer/client.h>
 
 const microkit_channel TO_RECV = 2;
+const microkit_channel TIMER_CH = 1;
 
 uintptr_t tx_buffer_data;
 uintptr_t tx_free;
@@ -20,9 +23,10 @@ typedef struct state {
 state_t state;
 
 void send(uint64_t data) {
+  sddf_dprintf("TX: Transmitting %ld\r\n", data);
 
   // get a free buffer
-  // NOTE: my current understanding is that one should NOT typically do
+  // NOTE: my current understanding is that one should NOT typically do;
   // this, since the microkit does not expect init() and notify() to take
   // very long, and thus is not necessarily guaranteed to handle incoming
   // notifications well.
@@ -40,12 +44,16 @@ void send(uint64_t data) {
   assert(!err);
 }
 
-void transmit(void) {
-  for (uint64_t i = 0;; i++) {
-    sddf_dprintf("TX: Transmitting %ld\r\n", i);
+void transmit() {
+  for(int i=0; i<100; ++i) {
+    uint64_t now = sddf_timer_time_now(TIMER_CH); // ns
+    send(now);
     microkit_notify(TO_RECV);
-    send(i);
   }
+
+  // set timeout
+  uint64_t next = now + 1000000000; // one second in the future
+  sddf_timer_set_timeout(TIMER_CH, next);
 }
 
 void init(void) {
@@ -59,10 +67,14 @@ void init(void) {
   net_buffers_init(&state.tx_queue, 0);
 
   transmit();
+
 }
 
 void notified(microkit_channel ch) {
   switch (ch) {
+  case TIMER_CH:
+    transmit();
+    break;
   default:
     sddf_dprintf("recv: received notification on unexpected channel: %u\r\n",
                  ch);

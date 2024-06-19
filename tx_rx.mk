@@ -11,8 +11,7 @@ SYSTEM_FILE := $(SRC)/board/$(BOARD)/tx_rx.system
 # sDDF
 SDDF_INC := $(SDDF)/include
 SDDF_UTIL := $(SDDF)/util
-NIC_DRIVER := $(SDDF)/drivers/network/meson
-NET_COMPS := $(SDDF)/network/components
+SDDF_CLOCK := $(SDDF)/drivers/clock/meson
 
 vpath %.c $(SDDF) $(SRC)
 
@@ -36,6 +35,9 @@ LIBS := --start-group -lmicrokit -Tmicrokit.ld -lc libsddf_util_debug.a --end-gr
 %.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
+timer.o: $(SDDF_CLOCK)/timer.c
+	$(CC) $(CFLAGS) -c $< -o $@
+
 board_src/%.o: board/%.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
@@ -49,12 +51,16 @@ tx.elf: tx.o libsddf_util.a libsddf_util_debug.a
 
 rx.elf: rx.o libsddf_util.a libsddf_util_debug.a
 	$(LD) $(LDFLAGS) $^ $(LIBS) -o $@
+	
+timer.elf: timer.o
+	$(LD) $(LDFLAGS) $^ $(LIBS) -o $@
 
 # Bootable
-$(IMAGE_FILE) $(REPORT_FILE): $O tx.elf rx.elf $(SYSTEM_FILE)
+$(IMAGE_FILE) $(REPORT_FILE): $O tx.elf rx.elf timer.elf $(SYSTEM_FILE)
 	$(MICROKIT_TOOL) $(SYSTEM_FILE) --search-path $O --board $(BOARD) --config $(CONFIG) -o $(IMAGE_FILE) -r $(REPORT_FILE)
 	
 	
 include $(SDDF_UTIL)/util.mk
+include $(SDDF_CLOCK)/timer_driver.mk
 	
--include tx.d rx.d
+-include tx.d rx.d timer.d
