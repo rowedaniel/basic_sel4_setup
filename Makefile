@@ -33,6 +33,14 @@ export MICROKIT_TOOL := $(MICROKIT_ROOT)/bin/microkit
 export IMAGE_FILE := $(BUILD)/loader.img
 export REPORT_FILE := $(BUILD)/report.txt
 
+ifeq ($(strip $(MICROKIT_BOARD)), odroidc4)
+	export DRIV_DIR := meson
+	export TIMER_DRV_DIR := meson
+	export CPU := cortex-a55
+else
+$(error Unsupported MICROKIT_BOARD given)
+endif
+
 all: $(IMAGE_FILE)
 	
 $(IMAGE_FILE) $(REPORT_FILE) clean clobber: $(BUILD)/Makefile

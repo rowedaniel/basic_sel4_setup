@@ -11,7 +11,10 @@ SYSTEM_FILE := $(SRC)/board/$(BOARD)/tx_rx.system
 # sDDF
 SDDF_INC := $(SDDF)/include
 SDDF_UTIL := $(SDDF)/util
-SDDF_CLOCK := $(SDDF)/drivers/clock/meson
+SDDF_CLOCK := $(SDDF)/drivers/clock/$(DRIV_DIR)
+
+ETHERNET_DRIVER:=$(SDDF)/drivers/network/$(DRIV_DIR)
+ETHERNET_CONFIG_INCLUDE:=$(SRC)/include/ethernet_config
 
 vpath %.c $(SDDF) $(SRC)
 
@@ -26,6 +29,7 @@ CFLAGS := \
 		-DMICROKIT_CONFIG_$(CONFIG) \
 		-I$(BOARD_PATH)/include \
 		-I$(SDDF_INC) \
+		-I$(ETHERNET_CONFIG_INCLUDE) \
 		-MD \
 		-MP
 LDFLAGS += -L$(BOARD_PATH)/lib -L$(LIBC)
@@ -46,21 +50,25 @@ $O:
 	@mkdir -p $O $O/src $O/test $O/generated $O/board/$(BOARD) $O/sddf
 
 # elfs
-tx.elf: tx.o libsddf_util.a libsddf_util_debug.a
-	$(LD) $(LDFLAGS) $^ $(LIBS) -o $@
+# tx.elf: tx.o libsddf_util.a libsddf_util_debug.a
+# 	$(LD) $(LDFLAGS) $^ $(LIBS) -o $@
 
 rx.elf: rx.o libsddf_util.a libsddf_util_debug.a
 	$(LD) $(LDFLAGS) $^ $(LIBS) -o $@
 	
-timer.elf: timer.o
-	$(LD) $(LDFLAGS) $^ $(LIBS) -o $@
+# timer.elf: timer.o
+# 	$(LD) $(LDFLAGS) $^ $(LIBS) -o $@
 
+eth_driver.elf: libsddf_util_debug.a
+	
 # Bootable
-$(IMAGE_FILE) $(REPORT_FILE): $O tx.elf rx.elf timer.elf $(SYSTEM_FILE)
+# $(IMAGE_FILE) $(REPORT_FILE): $O tx.elf rx.elf timer.elf $(SYSTEM_FILE)
+$(IMAGE_FILE) $(REPORT_FILE): $O rx.elf eth_driver.elf $(SYSTEM_FILE)
 	$(MICROKIT_TOOL) $(SYSTEM_FILE) --search-path $O --board $(BOARD) --config $(CONFIG) -o $(IMAGE_FILE) -r $(REPORT_FILE)
 	
 	
 include $(SDDF_UTIL)/util.mk
 include $(SDDF_CLOCK)/timer_driver.mk
+include $(ETHERNET_DRIVER)/eth_driver.mk
 	
 -include tx.d rx.d timer.d

@@ -1,29 +1,57 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <system>
 
-    <!-- Odroid-C4 timer physical addresses -->
-    <memory_region name="timer" size="0x10_000" phys_addr="0xffd0f000"/>
+
+    <!-- physical regions -->
+    <!-- <memory_region name="timer" size="0x10_000" phys_addr="0xffd0f000"/> -->
+    <memory_region name="eth0"  size="0x10_000" phys_addr="0xff3f0000"/>
+    <memory_region name="uart"  size="0x1_000"  phys_addr="0xff803000" />
 
     <!-- shared memory ring buffers -->
-    <memory_region name="uart" size="0x1_000" phys_addr="0xff803000" />
-    <memory_region name="tx_buffer_data" size="0x200_000" page_size="0x200_000" />
-    <memory_region name="tx_free" size="0x200_000" page_size="0x200_000"/>
-    <memory_region name="tx_active" size="0x200_000" page_size="0x200_000"/>
+    <memory_region name="hw_ring_buffer" size="0x10_000"/>
+    <!-- <memory_region name="tx_buffer_data"    size="0x200_000" page_size="0x200_000" /> -->
+    <memory_region name="tx_free"           size="0x200_000" page_size="0x200_000"/>
+    <memory_region name="tx_active"         size="0x200_000" page_size="0x200_000"/>
+    <memory_region name="rx_buffer_data"    size="0x200_000" page_size="0x200_000" />
+    <memory_region name="rx_free"           size="0x200_000" page_size="0x200_000"/>
+    <memory_region name="rx_active"         size="0x200_000" page_size="0x200_000"/>
+    
+    <protection_domain name="eth_driver" priority="101" budget="20000">
+        <program_image path="eth_driver.elf" />
+        <map mr="eth0"           vaddr="0x2_000_000" perms="rw" cached="false" setvar_vaddr="eth_regs"/>
+
+        <map mr="rx_free"        vaddr="0x2_400_000" perms="rw" cached="true" setvar_vaddr="rx_free"/>
+        <map mr="rx_active"      vaddr="0x2_600_000" perms="rw" cached="true" setvar_vaddr="rx_active"/>
+        <map mr="tx_free"        vaddr="0x2_800_000" perms="rw" cached="true" setvar_vaddr="tx_free"/>
+        <map mr="tx_active"      vaddr="0x2_a00_000" perms="rw" cached="true" setvar_vaddr="tx_active"/>
+
+        <irq irq="40" id="0"/> <!--> ethernet interrupt -->
+
+        <map mr="hw_ring_buffer" vaddr="0x2_200_000" perms="rw" cached="false" setvar_vaddr="hw_ring_buffer_vaddr"/>
+        <setvar symbol="hw_ring_buffer_paddr" region_paddr="hw_ring_buffer"/>
+    </protection_domain>
 
     <protection_domain name="recv" priority="95" budget="20000">
         <program_image path="rx.elf" />
-        <map mr="tx_buffer_data"    vaddr="0x2_200_000" perms="rw" cached="true" setvar_vaddr="tx_buffer_data" />
-        <map mr="tx_free"           vaddr="0x2_400_000" perms="rw" cached="true" setvar_vaddr="tx_free" />
-        <map mr="tx_active"         vaddr="0x2_600_000" perms="rw" cached="true" setvar_vaddr="tx_active" />
         <map mr="uart"              vaddr="0x5_000_000" perms="rw" cached="false" setvar_vaddr="uart_base" />
+
+        <map mr="rx_free"           vaddr="0x2_400_000" perms="rw" cached="true"  setvar_vaddr="rx_free" />
+        <map mr="rx_active"         vaddr="0x2_600_000" perms="rw" cached="true"  setvar_vaddr="rx_active" />
+
+        <map mr="rx_buffer_data"    vaddr="0x2_200_000" perms="rw" cached="true"  setvar_vaddr="rx_buffer_data_vaddr" />
+        <setvar region_paddr="rx_buffer_data" symbol="rx_buffer_data_paddr" />
     </protection_domain>
 
+<!-- 
     <protection_domain name="send" priority="95" budget="20000">
         <program_image path="tx.elf" />
-        <map mr="tx_buffer_data"    vaddr="0x2_200_000" perms="rw" cached="true" setvar_vaddr="tx_buffer_data" />
+        <map mr="uart"              vaddr="0x5_000_000" perms="rw" cached="false" setvar_vaddr="uart_base" />
+
         <map mr="tx_free"           vaddr="0x2_400_000" perms="rw" cached="true" setvar_vaddr="tx_free" />
         <map mr="tx_active"         vaddr="0x2_600_000" perms="rw" cached="true" setvar_vaddr="tx_active" />
-        <map mr="uart"              vaddr="0x5_000_000" perms="rw" cached="false" setvar_vaddr="uart_base" />
+
+        <map mr="tx_buffer_data"    vaddr="0x2_200_000" perms="rw" cached="true" setvar_vaddr="tx_buffer_data_vaddr" />
+        <setvar region_paddr="tx_buffer_data" symbol="tx_buffer_data_paddr" />
     </protection_domain>
 
     <protection_domain name="timer" priority="200" pp="true">
@@ -34,17 +62,17 @@
              cached="false"
              setvar_vaddr="gpt_regs"/>
         <irq irq="42" id="0" trigger="edge"/>
-    </protection_domain>
+    </protection_domain> -->
 
     
     <channel>
-        <end pd="recv" id="2" />
-        <end pd="send" id="2" />
+        <end pd="eth_driver"    id="2" />
+        <end pd="recv"          id="0" />
     </channel>
 
-    <channel>
-        <end pd="timer" id="1"/>
-        <end pd="send" id="1"/>
-    </channel>
+    <!-- <channel>
+        <end pd="timer"         id="1"/>
+        <end pd="send"          id="1"/>
+    </channel> -->
 
 </system>
