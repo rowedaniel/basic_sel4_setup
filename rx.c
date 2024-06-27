@@ -17,6 +17,7 @@ uintptr_t uart_base;
 
 typedef struct state {
   net_queue_handle_t rx_queue;
+  uint64_t count;
 } state_t;
 
 state_t state;
@@ -59,8 +60,10 @@ int receive(void) {
           ROUND_UP(buffer.len, 1 << CONFIG_L1_CACHE_LINE_SIZE_BITS));
 
   // read data from buffer
-  dump_packet(rx_buffer_data_vaddr - rx_buffer_data_paddr + buffer.io_or_offset,
-              buffer.len);
+  // dump_packet(rx_buffer_data_vaddr - rx_buffer_data_paddr + buffer.io_or_offset,
+  //             buffer.len);
+  state.count++;
+  sddf_dprintf("RX: %lu, active h=%u, t=%u\n\r", state.count, state.rx_queue.active->head, state.rx_queue.active->tail);
   buffer.len = 0;
 
   // return buffer to free queue
